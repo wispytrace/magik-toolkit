@@ -1,0 +1,13 @@
+{
+    "format":"RGB",
+    "width":640,
+    "height":640,
+    "path":"../yolov5s/yolov5-20/",
+    "used_image_num":12,
+    "feature_quantize_method":"KL",
+    "weight_quantize_method":"MAX_ABS"
+}
+
+
+
+

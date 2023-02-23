@@ -1,0 +1,165 @@
+2023-01-03:
+version-2.0.4:
+1. Convert and Optimizer
+  1.1. Add attribute activate_name to QuantizeShortcutInferenceV2;
+  1.2. Add oramSize, wramSize and framSize in MagikConfigArch;
+  1.3. Add ReducePrdExexuter in ShapeInference;
+  1.4. Add the pattern where subtraction and division are connected in BatchNormScaleRecognitionOptimizer;
+  1.5. Support for the new node types QuantizeMul, QuantizeSubInferenceV2 and QuantizeGlobalAvgpool2d;
+  1.6. Support group ConvTranspose through broadcast weight in ConvTransposeSeparationOptimizer.
+  1.7. Support QuantizeFeatureV2 as model input;
+2. Post training quantization
+  2.1. Add the necessary parameters in fusion HardSwish;
+  2.2. Fixed a bug of parameter B overflow in BT quantization;
+  2.3. Eliminate dead loops during pattern matching in weight correct;
+  2.4. Ensure channel alignment when adding concat_fuse_flag in Concat operator;
+  2.5. Support shape inconsistencies during correction and inference;
+  2.6. Update the processing of EltwiseAddInt8 in the transition from bs quant to bt quant;
+3. Serialize
+  3.1. Add the judgment flag of the first layer convolution k55,s44,ic=1 or k33,s22,ic=1 for T41 model;
+  3.2. Adjust the insertion of Formatconvert:
+    3.2.1. Add FormatConvert operator between Concat and Conv2DInt8 operators;
+    3.2.2. Add Formatconvert operator between EltwiseAddInt8 and Quantize, MatMulInt8 operators;
+    3.2.3. Add Formatconvert operator between SkipLayerNormalizationInt8 and Quantize, MatMulInt8 operators;
+  3.3. Fix a bug in Conv2D for layer resource extract;
+  3.4. Fix a bug of obtaining attribute input_channels in Mul operator;
+  3.5. Fix a bug of obtaining attribute output_shape in Reshape operator;
+  3.6. Fix is_fc in matmul operator;
+  3.7. Fix odfmts in Dequantize and TransposeInt8 operators;
+  3.8. Layer resource extract to Const operator;
+  3.9. Modify scale of BatchNorm operator;
+  3.10. Modify broad_cast_aligned of EltwiseMul operator;
+  3.11. Serialization supports ReduceMax, Where, HardswishInt8 and DepthToSpaceInt8 operator;
+  3.12. Support broadcast for Concat operator with an output bit width of 4 in channel alignment;
+  3.13. Support channel alignment when concat_fuse_flag is true;
+  3.14. The network with the first convolution layer k55s22 supports grayscale images as input;
+  3.15. Update concat_fuse_flag in Concat operator;
+  3.16. When need_quantize of the Concat operator is true, the Concat operator is not deleted;
+
+-------------------------------------------------------------------------------------
+2022-11-30
+version-2.0.3:
+1. Convert and Optimizer
+  1.1. Add attribute input_mean_type to QuantizeConv2DInferenceV2 and get attribute input_min_value and input_max_value from QuantizeConv2DInferenceV2 inputs;
+  1.2. Add default values for HardSigmoid attributes alpha and beta;
+  1.3. Add RemoveUselessOpAroundSoftmaxOptimizer to eliminate Transpose nodes before and after softmax;
+  1.4. Add ReshapeInferenceProcess interface to support updating model shape information;
+  1.5. Adjust input_mean, input_var and input_prepad to model_input_mean, model_input_var and model_input_prepad in ParamInference.
+  1.6. Support QuantizeConv2DInferenceV2 from pytorch 1.9 in TensorConvertOptimizer;
+  1.7. The activation type in the node is inferred as ActivationType_None when the output bit width is 32.
+2. Quantitative aware training
+  2.1. Add pad_before_bnscale attribute is used to determine the timing of pad execution;
+  2.2. First layer QuantizeConv2dInferenceV2 add input_mean_type attribute:
+    2.2.1. When input_mean_type is MEAN_FLOAT_OR_MUL, fuse bnscale into first layer as requantize param.
+    2.2.2. When input_mean_type is MEAN_INT_AND_UNIQUE, fuse bnscale into first layer as input_offset and input_scale.
+3. Post training quantization
+  3.1. Add attribute is_input in every node;
+  3.2. Add quant Info in NOp;
+  3.3. Fixed a problem during the transition from bs quant to bt quant;
+  3.4. Fuse mean and var into Conv2d;
+  3.5. Update condition in the transition from bs quant to bt quant;
+  3.6. Update the inferred data range of hardwish when generating lut.
+4. Serialize
+  4.1. Add the condition to modify the number of network input channels:
+     when target device is T41, the convolution weight shape of the first layer is 5x5x1x16 or 5x5x1x32, the strides are 4x4, and the input, output and weight are all 8bit, the number of network input channels is 1.
+  4.2. Add the pad_before_bnscale flag to the scale parameter of the first convolution;
+  4.3. Adjust the insertion of Formatconvert:
+    4.3.1. Add Formatconvert operator between Unpool2D and Conv2D operators;
+    4.3.2. Add Formatconvert operator between QuantizeConv2D and Softmax operators;
+    4.3.3. Add Formatconvert operator between QuantizeConv2D and Transpose operators;
+  4.4. Fix the bug of output_aligned parameter in GlobalAvgpool operator.
+  4.5. Modify the preprocessing flag bit of the first layer convolution.
+  4.6. Serialization supports HardSwish activation of Conv2DInt8 and MatMulInt8 operators;
+  4.7. Serialization supports QuantizeLSTMV2 operator;
+  4.8. Skip Const node when adding dimension (3dim_to_4dim);
+  4.9. The modify_global_avg_pool_conv1x1_to_matmul function is turned off.
+  4.10. When target device is T41, the strides are 2x2, and the input, output and weight are all 8bit, the weight of the first layer of convolution and shape 3x3x1x16 or 3x3x1x3 to add a new data format;
+
+-------------------------------------------------------------------------------------
+2022-11-09
+version-2.0.2:
+1. Convert and Optimizer
+  1.1. Support multi-dimensional input in SliceExecuter;
+  1.2. Support Where and OneHot in ParamInference;
+2. Quantitative aware training
+  2.1. The inputs(initial h and initial c) of QuantizeLSTMV2 are not quantized;
+3. Post training quantization
+  3.1. When Focus exists, fold BatchNormScaleInt8 into Conv2DInt8;
+  3.2. When target device is T41 and bit width of input and output is 4, fold EltwiseInt8 into Conv2DInt8;
+4. Serialize
+  4.1. Add serialization of Constant operator.
+  4.2. Adding broadcast calculation method to Add operator.
+  4.3. Update how FormatConvert are inserted:
+       Add FormatConvert between Conv2DInt8 and ConcatInt8.
+       Add FormatConvert between Quantize and ConcatInt8.
+  4.4. When the target device is T41 and bit width of input, output and weight of first convolution layer (the strides must be 4x4) are 8, the weight shape 5x5x1x16 to add a new data format;
+  4.5. When the target device is T41 and the input channel and output channel of non first layer convolution (the strides must be 1x1) are both 16, the weight performs special alignment filling.
+
+-------------------------------------------------------------------------------------
+2022-11-01
+version-2.0.1:
+1. Convert and Optimizer
+  1.1. Add a new layer normalization pattern that contains Cast node;
+  1.2. Add output format in magik config;
+  1.3. Add target version to the banner that shows the version information;
+  1.4. Fix the executable condition bug in FocusRecognitionOptimizer;
+  1.5. Set the default values on the keep dims of ReduceOperator;
+  1.6. Support append mode to set the network output;
+  1.7. Support shared structure in ConvsConcatSeparationOptimizer and HardSwishRecognitionOptimizer;
+  1.8. The first input of a QuantizeBatchNormInferenceV2 is supported as a constant;
+2. Quantitative aware training
+  2.1. QuantizeLSTMV2 that contain initial h and initial c are supported;
+  2.2. Support X2500 target device;
+3. Post training quantization
+  3.1. Add quantization mode 'is_fixed' to EltwiseAddInt8;
+  3.2. Fix a bug in inserting quantize node;
+  3.3. Support DepthToSpace operator quantization;
+  3.4. Support file parsing for series of data type(u8, u10, u12, u14, u16, f32);
+  3.5. Support the quantization of Focus when the quantization bit width and the model input bit width are consistent;
+  3.6. Tanh activation are transformed into LUT;
+  3.7. Update the processing when the convolution weight is minimal after quantization;
+  3.8. Update the quantization method of GRU and Concat;
+4. Serialize
+  4.1. Add layer_res to concat operator;
+  4.2. Add lut activation to MatMulInt8;
+  4.3. Fix an error in GRU weight split;
+  4.4. Merging three convolution nodes in consecutive series becomes a Merge node;
+  4.5. Remove FormatConvert before last layer according to output data format;
+  4.6. Tag parameter are added for board end format convert optimization;
+  4.7. When target device is T41, The weight of the first layer of convolution and shape 7x7x2xoc to add a new data format;
+5. Enable error code mechanism.
+
+-------------------------------------------------------------------------------------
+2022-10-25
+version-2.0.0:
+1. enable magik config;
+2. add caffe model converter;
+3. support FQAT quantize operator:
+  QuantizeConv2DInference, QuantizeConv2DInferenceV2, QuantizeFullconnectedInference, QuantizeFullconnectedInferenceV2, QuantizeShortcutInference,
+  QuantizeShortcutInferenceV2, QuantizeMaxInference, QuantizeMulInference, QuantizeConcatInference, QuantizeBatchNormInference, QuantizeBatchNormInferenceV2,
+  QuantizeAvgpool2dInference, QuantizeGlobalAvgpool2dInference, QuantizeLSTMV2, QuantizeLSTMInference;
+4. new modules supported in post training quantization:
+  GRU, Attention, LayerNormalization;
+5. add optimizer items:
+  ActivateFusionOptimizer, AttentionRecognitionOptimizer, AdjacentTransposeFusionOptimizer, BatchNormFusionOptimizer, BiasAddFusionOptimizer, CheckSubGraphOptimizer,
+  ConcatBypassOptimizer, ConvertClipToActivateOptimizer, ConvExpandDimOptimizer, ConvTransposeSeparationOptimizer, DilateConv2DRecognitionOptimizer, InsertConvertTensorOptimizer,
+  LayerNormalizationRecognitionOptimizer, MagikQuantizeOpsDifferentiationOptimizer, RebuildGenericGruOptimizer, RefiningModelSkeleton, TemporalShiftRecognitionOptimizer,
+  TransposeGruInputOptimizer;
+6. add PyTransformer module;
+7. add unittest module;
+
+-------------------------------------------------------------------------------------
+2021-07-07
+version-1.0.0:
+TransformKit can be divided into six parts: core, convert, check, optimize, quantize, serialize.
+1. Core module: This module mainly implements some basic functions of the conversion tool, including the proto protocol of the magik model, and some common public functions.
+2. Convert module to support mainstream model file formats such as `Tensorflow`, `ONNX`(PyTorch/MXNet) and `TFLite`.
+3. Check module: This module mainly realizes checking whether the model can be transformed correctly, and currently mainly realizes checking whether there are unquantized nodes on the backbone network for the quantized training model.
+4. Optimize module: operator fusion, operator substitution, and layout adjustment. the module consists of quantization aware training graph optimization, post quantization graph optimization, and serialized graph optimization.
+  4.1 Quantitative aware training graph optimization: The function implemented by this module is mainly used to the model trained by the training plugin. It mainly realizes the fusion of the calibration operator with the NOp operator.
+  4.2 Post quantization graph optimization: The function implemented by this module is mainly used to complete the operator fusion of the post quantization model (e.g. Quantize and Dequantize, Batch Normal, PRelu).
+  4.3 Serialization graph optimization: The function implemented by this module is mainly used to optimize the model that needs to be serialized.
+5. Quantize module consists of post training quantization and aware training quantization.
+  The former includes general techniques to reduce CPU and hardware accelerator latency, processing, power, and model size with little degradation in model accuracy. These techniques can be performed on an already-trained float model.
+  The latter can emulates inference-time quantization, creating a model that downstream tools will use to produce actually quantized models. The quantized models use lower-precision (e.g. 8-bit instead of 32-bit float), leading to benefits during deployment, it including the quantization of Txx and T40 models.
+6. Serialize module: This module mainly realizes the transformation of the quantified model to the Txx and T40 platforms.
